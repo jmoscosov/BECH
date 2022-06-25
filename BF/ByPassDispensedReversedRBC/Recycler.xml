@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Config>
+	<NoteCountLength>2</NoteCountLength>
+  <LastTxStatusMaxLength>26</LastTxStatusMaxLength>
+	<Parameters>
+		<Option Number="45" Mask="True">72</Option>
+	</Parameters>
+	<StateDefinitions>
+		<State Number="000">A010548130006002002001131</State>
+	</StateDefinitions>
+	<NoteMappings>
+		<Note ID="01">03</Note>
+		<Note ID="02">04</Note>
+		<Note ID="03">05</Note>
+		<Note ID="04">06</Note>
+		<Note ID="05">02</Note>
+	</NoteMappings>
+  <!--<Devices>
+    <Message ID="JA">
+      <Device DIG="M" />
+      <Device DIG="y" />
+      <Device DIG="X">0</Device>
+    </Message>
+    <Message ID="HA">
+      <Device DIG="M" />
+      <Device DIG="y" />
+      <Device DIG="X">39</Device>
+    </Message>
+    <Message ID="IA">
+      <Device DIG="M" />
+      <Device DIG="y" />
+      <Device DIG="X">01101</Device>
+    </Message>
+  </Devices>-->
+</Config>
