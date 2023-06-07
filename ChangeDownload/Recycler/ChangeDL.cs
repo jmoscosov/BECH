@@ -5,9 +5,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Xml;
 
-namespace Recycler
+namespace ChangeScreens
 {
-    public class Recycler
+    public class ChangeDL
     {
         private const byte CONTINUE = 0;
 
@@ -21,8 +21,8 @@ namespace Recycler
                 if (msg != null)
                 {
                     var msgStr = msg.ToString();
-                    Logger.Log($"--> {0}", msgStr);
-                   if (ProcessMessage(ref msgStr))
+
+                    if (ProcessMessage(ref msgStr))
                     {
                         Logger.Log("Updating message pointer");
 
@@ -49,8 +49,8 @@ namespace Recycler
                 if (msg != null)
                 {
                     var msgStr = msg.ToString();
-                    Logger.Log($"<-- {0}", msgStr);
-                   if (ProcessMessage(ref msgStr))
+
+                    if (ProcessMessage(ref msgStr))
                     {
                         Logger.Log("Updating message pointer");
 
@@ -78,112 +78,100 @@ namespace Recycler
             {
                 /* Se verifica si el mensaje es Enhanced Configuration Parameters Load
                  * para cambiar el Option 45 habilitando reciclado */
-                if (arr.Length > 5 && arr[0].StartsWith("3") && arr[3].Equals("1A"))
+                /* if (arr.Length > 5 && arr[0].StartsWith("3") && arr[3].Equals("1A"))
+                 {
+                     Logger.Log("Message is Enhanced Configuration Parameters Load");
+
+                     if (ChangeConfigurationParameters(ref arr[5]))
+                     {
+                         message = ReassembleMessage(arr);
+
+                         return true;
+                     }
+                 }*/
+                /* Se verifica si el mensaje es carga de pantallas para cambiar las pantallas en donde se muestran menu */
+                if (arr.Length > 4 && arr[0].StartsWith("3") && arr[3].Equals("11"))
                 {
-                    Logger.Log("Message is Enhanced Configuration Parameters Load");
-
-                    if (ChangeConfigurationParameters(ref arr[5]))
+                    /*
+                    for (int i = 4; i < arr.Length; i++)
                     {
-                        message = ReassembleMessage(arr);
-
-                        return true;
-                    }
-                }
-
-                /* Se verifica si el mensaje es carga de estados para cambiar el estado 'l'
-                 * de Passbook por un estado 'A' normal */
-                if (arr.Length > 4 && arr[0].StartsWith("3") && arr[3].Equals("12"))
-                {
-                    Logger.Log($"Message is State Table Load: {arr[4]}");
-
-                    if (ChangeStateData(ref arr[4]))
-                    {
-                        message = ReassembleMessage(arr);
-
-                        return true;
-                    }
-                }
-
-                /* Si el mensaje es un Transaction Request, se cambian los índices del template
-                 * para el depósito. Adicionalmente, se corta el estado de la última transacción. */
-                if (arr.Length > 0 && arr[0].StartsWith("11"))
-                {
-                    Logger.Log("Message is Transaction Request");
-                    Logger.Log($"Original Message -> : { message}");
-                    var changed = false;
-
-                    if (ChangeNoteTypes(ref arr))
-                    {
-                        message = ReassembleMessage(arr);
-
-                        changed |= true;
-                    }
-                  // Metodo que permite convertir las cantidades con tres digitos a dos digitos
-                    if (ChangeNoteTypesDeposit(ref arr))
-                        {   
-                            message = ReassembleMessage(arr);
-                            changed |= true;
+                        switch (arr[i].Substring(0, 3))
+                        {
+                            case "014":
+                                Logger.Log($" JM185384 - ChangeScreens - Screen number to Parse: {arr[i].Substring(0, 3)}");
+                                if (ChangeScreenData(ref arr, i))
+                                {
+                                    message = ReassembleMessage(arr);
+                                    return true;
+                                }
+                                break;
+                            case "030":
+                                Logger.Log($" JM185384 - ChangeScreens - Screen number to Parse: {arr[i].Substring(0, 3)}");
+                                if (ChangeScreenData(ref arr, i))
+                                {
+                                    message = ReassembleMessage(arr);
+                                    return true;
+                                }
+                                break;
+                            default:
+                                break;
                         }
-                     
-                    //if (ChangeLastTxStatusMaxLength(ref arr))
-                    //{
-                    //    message = ReassembleMessage(arr);
 
-                    //    changed |= true;
-                    //}
-
-                    return changed;
-                }
-
-                if (arr.Length > 6 && arr[0].Equals("22") && arr[3].Equals("F") && arr[4].StartsWith("HA"))
-                {
-                    Logger.Log("Message is Send Configuration Information - Send hardware configuration data only");
-
-                    if (ChangeHardwareConfiguration(ref arr))
-                    {
-                        message = ReassembleMessage(arr);
-
-                        return true;
                     }
+                    */
                 }
-
-                if (arr.Length > 4 && arr[0].Equals("22") && arr[3].Equals("F") && arr[4].StartsWith("IA"))
-                {
-                    Logger.Log("Send Configuration Information - Send supplies data only");
-
-                    if (ChangeSuppliesData(ref arr))
+                // Verifica si es un mensaje de configuracion de statedata
+                  if (arr.Length > 4 && arr[0].StartsWith("3") && arr[3].Equals("12"))
+                   {
+                    //int index = 4;
+                    for (int index = 4; index < arr.Length; index++)
                     {
-                        message = ReassembleMessage(arr);
+                       Logger.Log($"JM185384 - Message is State Table Load: {arr[index]}");
+                        switch (arr[index].Substring(0, 3))
+                        {
+                            case "910":
+                                Logger.Log($"JM185384 - ChangeStateData - State number to Parse: {arr[index].Substring(0, 3)}");
+                                if (ChangeStateData(ref arr, index, "910Y910138138912911005012000"))
+                                {
+                                    message = ReassembleMessage(arr);
 
-                        return true;
+                                    return true;
+                                }
+                                break;
+                            case "060":
+                                Logger.Log($"JM185384 - ChangeStateData - State number to Parse: {arr[index].Substring(0, 3)}");
+                                if (ChangeStateData(ref arr, index, "060Y060138138062061005012000"))
+                                {
+                                    message = ReassembleMessage(arr);
+
+                                    return true;
+                                }
+                                break;
+                            case "401":
+                                Logger.Log($"JM185384 - ChangeStateData - State number to Parse: {arr[index].Substring(0, 3)}");
+                                if (ChangeStateData(ref arr, index, "401Y060138138403061005012000"))
+                                {
+                                    message = ReassembleMessage(arr);
+
+                                    return true;
+                                }
+                                break;
+                            case "402":
+                                Logger.Log($"JM185384 - ChangeStateData - State number to Parse: {arr[index].Substring(0, 3)}");
+                                if (ChangeStateData(ref arr, index, "402F026141138401402255012027"))
+                                {
+                                    message = ReassembleMessage(arr);
+
+                                    return true;
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+
                     }
-                }
+                   }
 
-                if (arr.Length > 4 && arr[0].Equals("22") && arr[3].Equals("F") && arr[4].StartsWith("JA"))
-                {
-                    Logger.Log("Message is Send Configuration Information - Send fitness data only");
-
-                    if (ChangeFitnessData(ref arr))
-                    {
-                        message = ReassembleMessage(arr);
-
-                        return true;
-                    }
-                }
-
-                // ELIMINA LOS STATUS DEL MENSAJE NO SOLICITADO
-                // Y CAMBIA LA POSICION DE LAS DENOMINACIONES DEL TEMPLATE
-                if (arr.Length > 4 && arr[0].Equals("12") && arr[3].StartsWith("w"))
-                {
-                    Logger.Log("Unsolicited Message with fitness data - send forced device status to OK");
-
-                    if (ChangeUnsolicitedFitnessData(ref arr))
-                    {
-                        message = ReassembleMessage(arr);
-
-                        return true;
-                    }
-                }
             }
 
             return false;
@@ -210,54 +198,47 @@ namespace Recycler
             return message;
         }
 
-        private static bool ChangeStateData(ref string s)
+        private static bool ChangeScreenData(ref string[] arr, int index)
         {
-            if (string.IsNullOrEmpty(s))
-                return false;
+            const char FS = '\x1C';
+            const char GS = '\x1D';
+            const char FF = '\x0C';
+            const char SI = '\x0F';
+            const char ESC = '\x1B';
+            const char backslash = '\x5C';
 
-            var states = s.Split((char)NDCMessage.GS);
-            var changed = false;
+            var modified = false;
+            var sb = new StringBuilder();
+            byte[] Data = new byte[15];
+            Logger.Log($" JM185384 - ChangeScreens - Original Screen data : {arr[index]}");
+            if (arr[index].StartsWith("014"))
+                sb.Append("014" + FF + SI + "@@" + ESC + "P2013" + ESC + backslash + ESC + "[27m" + ESC + "[80m" + SI + "AEPOR FAVOR SELECCIONE" + SI + "BJEL PRODUCTO" + SI + "CECON QUE DESEA OPERAR" + SI + "E@CUENTA" + SI + "E1CUENTA" + SI + "F@CORRIENTE" + SI + "H@LINEA" + SI + "I@DE CREDITO" + SI + "K@CUENTA DE" + SI + "I1CREDITO" + SI + "L@AHORRO" + SI + "E7 VISTA /" + SI + "F1CUENTA RUT");
+          /*  if (arr[index].StartsWith("017"))
+                Data = Encoding.ASCII.GetBytes("017" + FF + SI + "@@" + ESC + "P2013" + ESC + backslash + ESC + "[27m" + ESC + "[80m" + SI + "@HTARJETA DE CREDITO" + SI + "CBOPERACION QUE DESEA REALIZAR" + SI + "HA AVANCE EN" + SI + "H1  CONSULTA" + SI + "IA EFECTIVO" + SI + "I1  DE SALDO" + SI + "KA CAMBIO NUMERO" + SI + "LA SECRETO" + SI + "N1  SALIR" + FS);*/
+            if (arr[index].StartsWith("030"))
+                sb.Append("030" + FF + SI + "@@" + ESC + "P2013" + ESC + backslash + ESC + "[27m" + ESC + "[80m" + SI + "@GCUENTA CORRIENTE" + SI + "BDPOR FAVOR SELECCIONE LA" + SI + "CBOPERACION QUE DESEA REALIZAR" + SI + "EAGIRO RAPIDO" + SI + "FAPOR $10.000" + SI + "HAGIRO RAPIDO" + SI + "IAPOR $20.000" + SI + "KAGIRO RAPIDO" + SI + "LAPOR $50.000" + SI + "NAGIRO POR" + SI + "OAOTRO MONTO");
 
-            for (int i = 0; i < states.Length; i++)
-            {
-                var number = states[i].Substring(0, 3);
+            //Data = Encoding.ASCII.GetBytes("030" + FF + SI + "@@" + ESC + "P2013" + ESC + backslash + ESC + "[27m" + ESC + "[80m" + SI + "@GCUENTA CORRIENTE" + SI + "BDPOR FAVOR SELECCIONE LA" + SI + "CBOPERACION QUE DESEA REALIZAR" + SI + "EA  GIRO RAPIDO" + SI + "F@<< POR $ 5.000" + SI + "HA  GIRO RAPIDO" + SI + "I@<< POR $15.000" + SI + "KA  GIRO RAPIDO" + SI + "L@<< POR $50.000" + SI + "NA  GIRO POR" + SI + "O@<< OTRO MONTO" + FS);
 
-                if (Config.StateDefinitions.ContainsKey(number))
-                {
-                    Logger.Log($"Changing state data for state {number}");
+            // sb.Append(Encoding.Default.GetString(Data));
+            Logger.Log($" JM185384 - ChangeScreens - New Screen data : {sb.ToString()}");
+            // string str = Convert.ToBase64String(Data);
+            arr[index] = sb.ToString();//Encoding.Default.GetString(Data);
+            modified = true;
 
-                    var data = Config.StateDefinitions[number].InnerText;
 
-                    if (!string.IsNullOrEmpty(data))
-                    {
-                        states[i] = $"{number}{data}";
-                        changed |= true;
-                    }
-                }
-                else
-                {
-                    Logger.Log($"No state definition for state {number}");
-                }
-            }
+            return modified;
+        }
+        private static bool ChangeStateData(ref string[] arr, int index, string newValue)
+        {
+            var sb = new StringBuilder();
+            Logger.Log($" JM185384 - ChangeState - Original State data : {arr[index]}");
 
-            if (changed)
-            {
-                var sb = new StringBuilder();
-
-                for (int i = 0; i < states.Length; i++)
-                {
-                    if (i > 0)
-                        sb.Append((char)NDCMessage.GS);
-
-                    sb.Append(states[i]);
-                }
-
-                s = sb.ToString();
-
-                return true;
-            }
-
-            return false;
+            sb.Append(newValue);
+            Logger.Log($" JM185384 - ChangeState - New State data : {sb.ToString()}");
+            arr[index] = sb.ToString();
+            
+            return true;
         }
 
         private static bool ChangeConfigurationParameters(ref string s)
@@ -454,7 +435,7 @@ namespace Recycler
 
                 for (int i = 1; i < arr[index].Length; i++)
                 {
-                    
+
                     current += arr[index][i];
 
                     if (current.Length == 2)
@@ -470,20 +451,21 @@ namespace Recycler
                         {
                             i = i + 2;
                         }
-                       // intNnotesbyType += arr[index][i + 3];
-                        
+                        // intNnotesbyType += arr[index][i + 3];
+
                         intValor1 = Convert.ToInt32(intNnotesbyType);
                         bool bExit = false;
                         int valorActual = intValor1;
                         int valorMod = 0;
-                        if (valorActual >= 100) {
+                        if (valorActual >= 100)
+                        {
                             do
                             {
-                                if(valorActual >= 200)
+                                if (valorActual >= 200)
                                 {
-                                    valorMod  = valorActual - 99;
+                                    valorMod = valorActual - 99;
                                 }
-                                else if(valorMod >= 300)
+                                else if (valorMod >= 300)
                                 {
 
                                 }
@@ -491,9 +473,9 @@ namespace Recycler
                                 {
                                     valorMod = valorActual % 99;
                                 }
-                                 
-                             int valorFinal = 0;
-                             valorFinal = valorActual - valorMod;
+
+                                int valorFinal = 0;
+                                valorFinal = valorActual - valorMod;
 
                                 sb.Append(current + valorFinal.ToString("D2"));
                                 if (valorMod < 99)
@@ -648,18 +630,18 @@ namespace Recycler
                     {
                         var dig = s.Substring(0, 1);
                         var data = s.Substring(1);
-                        
+
                         if (prefix == "w" && (messageId == "IA" || messageId == "JA"))
                         {
                             Logger.Log($"Current device data {dig} : {data}");
-                            if(dig == "w" && (data.Length > 1))
+                            if (dig == "w" && (data.Length > 1))
                             {
                                 data = data.Substring(0, 1);
                                 Logger.Log($"Current device data {dig} : {data}");
                             }
 
                         }
-                       
+
                         dict.Add(dig, data);
                     }
                     else
